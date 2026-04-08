@@ -17,7 +17,7 @@ L'objectif principal est de transformer des données de match brutes en indicate
 ## Stack Technique
 * **Langage** : Python
 * **Manipulation de données** : Pandas, NumPy
-* **Base de données** : PostgreSQL (SQLAlchemy / Psycopg2)
+* **Base de données** : PostgreSQL (SQLAlchemy / Psycopg2), ou fichier csv
 * **Visualisation** : Plotly, streamlit
 * **API** : Riot Games API (Interface avec les services tiers et gestion des limites de requêtes)
 
