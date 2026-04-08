@@ -3,8 +3,8 @@ import plotly.express as px
 from db import get_all_champions
 from scoring import compute_scores  # signature changée, plus de df en paramètre
 
-st.set_page_config(page_title="LoL Neural-Synergy", page_icon="⚔️", layout="wide")
-st.title("LoL Draft Optimizer — Neural-Synergy")
+st.set_page_config(page_title="LoL Draft Optimizer", page_icon="⚔️", layout="wide")
+st.title("LoL Draft Optimizer")
 
 @st.cache_data(ttl=3600)
 def load_champions():
@@ -51,7 +51,7 @@ if st.button("Calculer le meilleur pick"):
             results = compute_scores(ally_data, enemy_data, target_role=my_role)
 
         if not results.empty:
-            st.balloons()
+            st.snow()
             cols = st.columns(5)
             for i, (champ, score) in enumerate(results.head(5).items()):
                 with cols[i]:
