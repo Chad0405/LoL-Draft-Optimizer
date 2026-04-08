@@ -24,7 +24,7 @@ L'objectif principal est de transformer des données de match brutes en indicate
 ## Structure des données
 Le dataset structuré permet une analyse granulaire des interactions :
 * **Identifiant de match** : Clé unique pour le suivi des parties classées.
-* **Champion 1 , Champion 2** : Indique le nom du champion puis synergies / matchups 
+* **Champion 1 , Champion 2** : Indique le nom du champion puis synergies / matchups. 
 * **Attributs des champions** : Rôles (Top, Jungle, Middle, Bottom, Utility) et caractéristiques.
 * **Indicateurs relationnels** : Variables booléennes distinguant les relations alliées des relations adverses.
 * **Cible (Label)** : Résultat final de la partie utilisé pour l'évaluation des modèles.
