@@ -28,3 +28,5 @@ Le dataset structuré permet une analyse granulaire des interactions :
 * **Attributs des champions** : Rôles (Top, Jungle, Middle, Bottom, Utility) et caractéristiques.
 * **Indicateurs relationnels** : Variables booléennes distinguant les relations alliées des relations adverses.
 * **Cible (Label)** : Résultat final de la partie utilisé pour l'évaluation des modèles.
+
+**Le dataset que j'ai réalisé pour l'instant est disponible sur [Kaggle](https://www.kaggle.com/datasets/chadyy/pairs-csv/data).**
