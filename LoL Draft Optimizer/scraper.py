@@ -51,9 +51,9 @@ def extract_champion_pairs(match: dict) -> list[dict]:
 if __name__ == "__main__":
     init_db()  # crée la table si besoin
     print("Récupération des joueurs Platinum...")
-
+# Modifiez ici pour prendre des joueurs du rang souhaité
     players = get_platinum_players(tier="PLATINUM", division="III", page=1)
-
+# Modifiez le :5 par le nombre de joueurs que vous voulez récupérer, on peut aussi reprendre à partir d'un certain index ex 5:10
     for p_idx, player in enumerate(players[:5]):
         try:
             puuid = player.get("puuid")
@@ -61,8 +61,8 @@ if __name__ == "__main__":
                 continue
 
             print(f"\nJoueur {p_idx+1}/50 (PUUID: {puuid[:10]}...)")
-            m_ids = get_match_ids(puuid, count=40)
-            time.sleep(1.2)
+            m_ids = get_match_ids(puuid, count=40)  # Nombre de games récupérés par joueur
+            time.sleep(1.2) 
 
             for i, mid in enumerate(m_ids):
                 try:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                     pairs      = extract_champion_pairs(match_data)
                     insert_pairs(pairs)  # direct en DB, plus de CSV
                     print(f"  Match {i+1}/{len(m_ids)} — {len(pairs)} paires insérées", end="\r")
-                    time.sleep(1.2)
+                    time.sleep(1.2)    # on attend pour respecter la limite de requetes imposée par l'API Riot Games (100 requetes toutes les 2 minutes max)
                 except Exception as e:
                     continue
 
