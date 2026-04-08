@@ -4,4 +4,4 @@ REGION = "euw1"           # Serveur EUW
 REGION_ROUTING = "europe" # Pour l'API Match-V5
 PUUID = "...."   # Pour ajouter ton identifiant unique Riot (récupéré via get_puuid)
 
-DB_URL = "..."
+DB_URL = "..."    # Pour pouvoir accéder à la base de donnée
