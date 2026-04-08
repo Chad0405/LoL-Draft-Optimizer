@@ -7,7 +7,7 @@ L'objectif principal est de transformer des données de match brutes en indicate
 
 ## Fonctionnalités techniques
 * **Extraction et Ingénierie des données** : Automatisation de la récupération des données via l'API Riot (Région EUW) et traitement des objets JSON complexes.
-* **Pipeline de stockage** : Structuration et stockage des données traitées dans une base de données relationnelle PostgreSQL pour optimiser les requêtes.
+* **Pipeline de stockage** : Structuration et stockage des données traitées dans une base de données relationnelle PostgreSQL pour optimiser les requêtes (aussi disponible plus simplement en .csv).
 * **Algorithme de Scoring** : Développement d'un moteur de calcul évaluant la force d'une draft selon trois axes :
     * Le winrate individuel des champions.
     * La synergie interne à l'équipe (duos et combinaisons).
