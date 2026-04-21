@@ -18,7 +18,9 @@ composition adverse.
 ## Fonctionnalités
 
 - **Moteur de recommandation ML** : Modèle XGBoost entraîné sur les données 
-  réelles (AUC-ROC : 0.626) produisant une probabilité de victoire par champion.
+  réelles (AUC-ROC : 0.626) produisant une probabilité de victoire par champion. 
+  Les données de synergies et de counters sont mises en cache RAM au démarrage 
+  pour des recommandations instantanées (<0.5s).
 - **Extraction et ingénierie des données** : Automatisation de la récupération 
   via l'API Riot Games (Match-V5, région EUW) et traitement des objets JSON.
 - **Pipeline de stockage** : Structuration des données dans une base PostgreSQL 
