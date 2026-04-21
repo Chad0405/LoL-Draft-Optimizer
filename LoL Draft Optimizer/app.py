@@ -1,22 +1,58 @@
 import streamlit as st
+import numpy as np
+import time
 import plotly.express as px
-from db import get_all_champions
-from scoring import compute_scores  # signature changée, plus de df en paramètre
+import joblib
+import pandas as pd
+from db import get_all_champions, get_candidates, get_conn
+from features import get_global_winrates, get_winrate_by_role, build_feature_vector
 
-st.set_page_config(page_title="LoL Draft Optimizer", page_icon="⚔️", layout="wide")
-st.title("LoL Draft Optimizer")
+st.set_page_config(page_title="LoL Neural-Synergy", page_icon="⚔️", layout="wide")
+st.title("LoL Draft Optimizer — Neural-Synergy")
+
+# Chargement une seule fois au démarrage
+@st.cache_resource
+def load_model():
+    model     = joblib.load("models/xgboost_draft.pkl")
+    feat_cols = joblib.load("models/feature_cols.pkl")
+    return model, feat_cols
 
 @st.cache_data(ttl=3600)
-def load_champions():
-    return get_all_champions()
+def load_static_data():
+    return (
+        get_all_champions(),
+        get_global_winrates(),
+        get_winrate_by_role(),
+    )
 
-ALL_CHAMPS = load_champions()
+@st.cache_data(ttl=3600)
+def load_lookups():
+    with get_conn() as conn:
+        syn_df = pd.read_sql("""
+            SELECT champ1, champ2, AVG(win::int) as wr
+            FROM champion_pairs WHERE same_team = TRUE
+            GROUP BY champ1, champ2 HAVING COUNT(*) >= 3
+        """, conn)
+        ctr_df = pd.read_sql("""
+            SELECT champ1, champ2, AVG(win::int) as wr
+            FROM champion_pairs WHERE same_team = FALSE
+            GROUP BY champ1, champ2 HAVING COUNT(*) >= 3
+        """, conn)
+    syn_lookup = {(r.champ1, r.champ2): float(r.wr) for _, r in syn_df.iterrows()}
+    ctr_lookup = {(r.champ1, r.champ2): float(r.wr) for _, r in ctr_df.iterrows()}
+    return syn_lookup, ctr_lookup
+
+syn_lookup, ctr_lookup = load_lookups()
+
+model, feat_cols            = load_model()
+ALL_CHAMPS, global_wr, role_wr = load_static_data()
 ROLES = ["AUTO", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"]
 
 if not ALL_CHAMPS:
     st.error("Base de données vide — lance d'abord scraper.py !")
     st.stop()
 
+# Sidebar
 st.sidebar.header("Ton Équipe (Alliés)")
 ally_data = []
 for i in range(4):
@@ -40,6 +76,7 @@ for i in range(5):
     if name != "None":
         enemy_data.append({"champ": name, "role": role})
 
+# Recommandation
 st.header("Ta Recommandation")
 my_role = st.selectbox("Quel rôle vas-tu jouer ?", ROLES[1:])
 
@@ -48,10 +85,46 @@ if st.button("Calculer le meilleur pick"):
         st.warning("Ajoute au moins un champion dans la draft !")
     else:
         with st.spinner("Analyse en cours..."):
-            results = compute_scores(ally_data, enemy_data, target_role=my_role)
+            candidates = get_candidates(my_role)
+
+            # Construit toutes les features d'un coup (pas de boucle SQL)
+            rows = []
+            for candidate in candidates:
+                gwr = global_wr.get(candidate, {})
+                rwr = role_wr.get((candidate, my_role), {})
+
+                syn_rates = [syn_lookup[(candidate, a["champ"])]
+                             for a in ally_data
+                             if (candidate, a["champ"]) in syn_lookup]
+
+                ctr_rates = [ctr_lookup[(candidate, e["champ"])]
+                             for e in enemy_data
+                             if (candidate, e["champ"]) in ctr_lookup]
+
+                ap_champs = {"Lux","Syndra","Orianna","Viktor","Cassiopeia",
+                             "TwistedFate","Ahri","Zoe","Veigar","Annie","Brand"}
+                ally_names = [a["champ"] for a in ally_data]
+                ap_count   = sum(1 for c in ally_names if c in ap_champs)
+
+                rows.append({
+                    "wr_global":       gwr.get("wr", 0.5),
+                    "nb_matchs":       gwr.get("nb", 0),
+                    "wr_role":         rwr.get("wr", gwr.get("wr", 0.5)),
+                    "nb_role":         rwr.get("nb", 0),
+                    "wr_synergie_moy": float(np.mean(syn_rates)) if syn_rates else gwr.get("wr", 0.5),
+                    "nb_synergies":    len(syn_rates),
+                    "wr_counter_moy":  float(np.mean(ctr_rates)) if ctr_rates else gwr.get("wr", 0.5),
+                    "nb_counters":     len(ctr_rates),
+                    "team_ap_ratio":   ap_count / max(len(ally_names), 1),
+                })
+
+            # Prédiction sur tous les champions en une seule fois
+            X      = pd.DataFrame(rows, index=candidates)[feat_cols].fillna(0)
+            probas = model.predict_proba(X)[:, 1]
+            results = pd.Series(probas * 100, index=candidates).sort_values(ascending=False)
 
         if not results.empty:
-            st.snow()
+            st.balloons()
             cols = st.columns(5)
             for i, (champ, score) in enumerate(results.head(5).items()):
                 with cols[i]:
@@ -71,4 +144,4 @@ if st.button("Calculer le meilleur pick"):
             fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.error("Pas assez de données pour cette configuration (seuil min: 3 matchs).")
+            st.error("Pas assez de données pour cette configuration.")
