@@ -47,6 +47,7 @@ composition adverse.
 
 ## Architecture du projet
 
+```
 LoL Draft Optimizer/
 │
 ├── scraper.py        # Collecte des données via l'API Riot
@@ -62,7 +63,8 @@ LoL Draft Optimizer/
 │   └── pairs.csv         # Dataset brut (disponible sur Kaggle)
 │
 └── models/
-└── xgboost_draft.pkl  # Modèle entraîné sur trop peu de données malheureusement
+    └── xgboost_draft.pkl  # Modèle entraîné
+```
 
 ## Structure des données
 
